@@ -335,8 +335,8 @@ std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)
 	return data;
 }
 
-id<MTLDevice>& GraphicsMetal::GetDevice() { return device_; }
+id<MTLDevice> GraphicsMetal::GetDevice() { return device_; }
 
-id<MTLCommandQueue>& GraphicsMetal::GetCommandQueue() { return commandQueue_; }
+id<MTLCommandQueue> GraphicsMetal::GetCommandQueue() { return commandQueue_; }
 
 }

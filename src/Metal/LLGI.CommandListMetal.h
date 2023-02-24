@@ -64,8 +64,8 @@ public:
     
 	void ResetCompleted() { isCompleted_ = false; }
 
-	id<MTLCommandBuffer>& GetCommandBuffer() { return commandBuffer_; }
-	id<MTLRenderCommandEncoder>& GetRenderCommandEncorder() { return renderEncoder_; }
+	id<MTLCommandBuffer> GetCommandBuffer() { return commandBuffer_; }
+	id<MTLRenderCommandEncoder> GetRenderCommandEncorder() { return renderEncoder_; }
 };
 
 } // namespace LLGI

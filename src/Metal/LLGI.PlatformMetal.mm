@@ -1,13 +1,10 @@
 
 #include <TargetConditionals.h>
 
-#if !(TARGET_OS_IPHONE) && !(TARGET_OS_SIMULATOR)
-#import <Cocoa/Cocoa.h>
 
 #import <MetalKit/MetalKit.h>
 
 #import "../LLGI.Platform.h"
-#import "../Mac/LLGI.WindowMac.h"
 #import "LLGI.GraphicsMetal.h"
 #import "LLGI.PlatformMetal.h"
 #import "LLGI.RenderPassMetal.h"
@@ -16,7 +13,7 @@
 namespace LLGI
 {
 
-struct PlatformMetal_Impl
+struct API_AVAILABLE(ios(13.0)) PlatformMetal_Impl
 {
 	Window* window_;
 	bool waitVSync_;
@@ -93,15 +90,22 @@ struct PlatformMetal_Impl
 
 	void generateLayer()
 	{
-		NSWindow* nswindow = (NSWindow*)window_->GetNativePtr(0);
+//        UIWindow *uiwindow = (UIWindow *)window_->GetNativePtr(0);
 		auto frameBufferSize = window_->GetFrameBufferSize();
 
 		layer = [CAMetalLayer layer];
 		layer.device = device;
-		layer.displaySyncEnabled = waitVSync_;
+        layer.drawsAsynchronously = waitVSync_;
 		layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-		nswindow.contentView.layer = layer;
-		nswindow.contentView.wantsLayer = YES;
+        // tode jessicatli
+//        uiwindow.maskView.layer = layer;
+#if !(TARGET_OS_IPHONE) && !(TARGET_OS_SIMULATOR)
+        id view =  window_->GetNSWindowAsVoidPtr();
+        if ([view isKindOfClass:[UIView class]]) {
+            UIView *ui = (UIView *)view;
+            ui.layer = layer;
+        }
+#endif
 		layer.drawableSize = CGSizeMake(frameBufferSize.X, frameBufferSize.Y);
 		layer.framebufferOnly = false; // Enable capture (getBytes)
 	}
@@ -109,7 +113,11 @@ struct PlatformMetal_Impl
 
 PlatformMetal::PlatformMetal(Window* window, bool waitVSync)
 {
-	impl = new PlatformMetal_Impl(window, waitVSync);
+    if (@available(iOS 13.0, *)) {
+        impl = new PlatformMetal_Impl(window, waitVSync);
+    } else {
+        // Fallback on earlier versions
+    }
 
 	ringBuffers_.resize(6);
 	for (size_t i = 0; i < ringBuffers_.size(); i++)
@@ -173,5 +181,3 @@ void PlatformMetal::SetWindowSize(const Vec2I& windowSize)
 }
 
 }
-
-#endif

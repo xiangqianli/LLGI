@@ -77,9 +77,9 @@ public:
 
 	RenderPassMetal* GetRenderPass() const { return renderPass_.get(); }
 
-	id<MTLDevice>& GetDevice();
+	id<MTLDevice> GetDevice();
 
-	id<MTLCommandQueue>& GetCommandQueue();
+	id<MTLCommandQueue> GetCommandQueue();
 };
 
 } // namespace LLGI

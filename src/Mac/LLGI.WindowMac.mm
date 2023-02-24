@@ -181,4 +181,59 @@ Vec2I WindowMac::GetFrameBufferSize() const
 
 } // namespace LLGI
 
+#else
+
+#import "LLGI.WindowMac.h"
+#import <MetalKit/MetalKit.h>
+
+namespace LLGI
+{
+    struct WindowMac_Impl
+    {
+
+        WindowMac_Impl(const char* title, Vec2I windowSize)
+        {
+        
+        }
+
+        ~WindowMac_Impl()
+        {
+            
+        }
+
+        void gc()
+        {
+        }
+
+        bool newFrame()
+        {
+            return true;
+        }
+    };
+
+    bool WindowMac::Initialize(const char* title, const Vec2I& windowSize)
+    {
+        impl_ = std::make_shared<WindowMac_Impl>(title, windowSize);
+        windowSize_ = windowSize;
+        return true;
+    }
+
+    bool WindowMac::DoEvent() { return true; }
+
+    void WindowMac::Terminate() { impl_.reset(); }
+
+    void* WindowMac::GetNSWindowAsVoidPtr() { return nullptr; }
+
+    bool WindowMac::OnNewFrame() { return DoEvent(); }
+
+    void* WindowMac::GetNativePtr(int32_t index) { return GetNSWindowAsVoidPtr(); }
+
+    Vec2I WindowMac::GetWindowSize() const { return windowSize_; }
+
+    Vec2I WindowMac::GetFrameBufferSize() const
+    {
+        return windowSize_;
+    }
+}
+
 #endif
