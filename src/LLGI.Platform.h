@@ -20,6 +20,8 @@ Window* CreateWindow(const char* title, Vec2I windowSize);
 
 Platform* CreatePlatform(const PlatformParameter& parameter, Window* window);
 
+Platform* CreatePlatformWithView(const PlatformParameter& parameter, Window* window, void *view);
+
 class Platform : public ReferenceObject
 {
 private:

@@ -3,6 +3,7 @@
 
 
 #import <MetalKit/MetalKit.h>
+#import <UIKit/UIKit.h>
 
 #import "../LLGI.Platform.h"
 #import "LLGI.GraphicsMetal.h"
@@ -13,40 +14,40 @@
 namespace LLGI
 {
 
-struct API_AVAILABLE(ios(13.0)) PlatformMetal_Impl
+struct  PlatformMetal_Impl
 {
 	Window* window_;
 	bool waitVSync_;
 
 	id<MTLDevice> device;
 	id<MTLCommandQueue> commandQueue;
-	CAMetalLayer* layer;
+    
 	id<CAMetalDrawable> drawable = nullptr;
-	NSAutoreleasePool* pool;
-
+    // jessicatli，切换CAMetalLayer为MTKView
+    MTKView *view_;
+    
 	PlatformMetal_Impl(Window* window, bool waitVSync) : window_(window), waitVSync_(waitVSync)
 	{
 		device = MTLCreateSystemDefaultDevice();
 		window_ = window;
 		waitVSync_ = waitVSync;
 
-		generateLayer();
-
 		commandQueue = [device newCommandQueue];
 	}
+    
+    PlatformMetal_Impl(Window* window, bool waitVSync, MTKView *view) : PlatformMetal_Impl(window, waitVSync)
+    {
+        view_ = view;
+    }
 
 	~PlatformMetal_Impl()
 	{
-		if (layer != nullptr)
-		{
-			[layer release];
-			layer = nullptr;
-		}
 
 		if (drawable != nullptr)
 		{
 			[drawable release];
 		}
+        [view_ releaseDrawables];
 	}
 
 	bool newFrame()
@@ -55,17 +56,8 @@ struct API_AVAILABLE(ios(13.0)) PlatformMetal_Impl
 		{
 			return false;
 		}
-
-		@autoreleasepool
-		{
-			if (drawable != nullptr)
-			{
-				[drawable release];
-			}
-
-			drawable = layer.nextDrawable;
-			[drawable retain];
-		}
+        
+        drawable = view_.currentDrawable;
 		return true;
 	}
 
@@ -81,43 +73,19 @@ struct API_AVAILABLE(ios(13.0)) PlatformMetal_Impl
 
 	void resetLayer()
 	{
-		if (layer != nullptr)
-		{
-			[layer release];
-			layer = nullptr;
-		}
+
 	}
 
 	void generateLayer()
 	{
-//        UIWindow *uiwindow = (UIWindow *)window_->GetNativePtr(0);
-		auto frameBufferSize = window_->GetFrameBufferSize();
-
-		layer = [CAMetalLayer layer];
-		layer.device = device;
-        layer.drawsAsynchronously = waitVSync_;
-		layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-        // tode jessicatli
-//        uiwindow.maskView.layer = layer;
-#if !(TARGET_OS_IPHONE) && !(TARGET_OS_SIMULATOR)
-        id view =  window_->GetNSWindowAsVoidPtr();
-        if ([view isKindOfClass:[UIView class]]) {
-            UIView *ui = (UIView *)view;
-            ui.layer = layer;
-        }
-#endif
-		layer.drawableSize = CGSizeMake(frameBufferSize.X, frameBufferSize.Y);
-		layer.framebufferOnly = false; // Enable capture (getBytes)
+        
 	}
+    
 };
 
 PlatformMetal::PlatformMetal(Window* window, bool waitVSync)
 {
-    if (@available(iOS 13.0, *)) {
-        impl = new PlatformMetal_Impl(window, waitVSync);
-    } else {
-        // Fallback on earlier versions
-    }
+    impl = new PlatformMetal_Impl(window, waitVSync);
 
 	ringBuffers_.resize(6);
 	for (size_t i = 0; i < ringBuffers_.size(); i++)
@@ -127,6 +95,19 @@ PlatformMetal::PlatformMetal(Window* window, bool waitVSync)
 	}
 
 	windowSize_ = window->GetWindowSize();
+}
+
+PlatformMetal::PlatformMetal(Window* window, bool waitVSync, void * view) {
+    impl = new PlatformMetal_Impl(window, waitVSync, (MTKView *)view);
+
+    ringBuffers_.resize(6);
+    for (size_t i = 0; i < ringBuffers_.size(); i++)
+    {
+        ringBuffers_[i].renderPass = CreateSharedPtr(new RenderPassMetal());
+        ringBuffers_[i].renderTexture = CreateSharedPtr(new TextureMetal());
+    }
+
+    windowSize_ = window->GetWindowSize();
 }
 
 PlatformMetal::~PlatformMetal() { delete impl; }

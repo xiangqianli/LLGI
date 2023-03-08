@@ -29,6 +29,7 @@ class PlatformMetal : public Platform
 
 public:
 	PlatformMetal(Window* window, bool waitVSync);
+    PlatformMetal(Window* window, bool waitVSync, void * view);
 	~PlatformMetal() override;
 	bool NewFrame() override;
 	void Present() override;

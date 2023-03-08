@@ -105,6 +105,14 @@ Platform* CreatePlatform(const PlatformParameter& parameter, Window* window)
 	return nullptr;
 }
 
+Platform* CreatePlatformWithView(const PlatformParameter& parameter, Window* window, void *view) {
+    Vec2I windowSize;
+    windowSize.X = 1280;
+    windowSize.Y = 720;
+    auto obj = new PlatformMetal(window, parameter.WaitVSync, view);
+    return obj;
+}
+
 Compiler* CreateCompiler(DeviceType device)
 {
 #ifdef ENABLE_CREATE_COMPILER
